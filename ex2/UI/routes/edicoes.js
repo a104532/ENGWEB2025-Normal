@@ -76,30 +76,38 @@ router.get('/paises/:pais', async (req, res) => {
       const response = await axios.get(`${API_BASE_URL}/edicoes`);
       const todasEdicoes = response.data;
       
-      // Filtrar participações
+      // Processar participações e organizações
       const participacoes = [];
+      const organizacoes = [];
+      
       todasEdicoes.forEach(edicao => {
-          // Verificar se o país participou (tem música nesta edição)
-          const musicaDoPais = edicao.musicas?.find(m => m.país === pais);
-          if (musicaDoPais) {
-              participacoes.push({
+          // Verificar se organizou
+          if (edicao.organizacao === pais) {
+              organizacoes.push({
                   id: gerarIdEdicao(edicao.anoEdição),
-                  ano: edicao.anoEdição,
-                  musica: musicaDoPais.título,
-                  interprete: musicaDoPais.intérprete,
-                  venceu: edicao.vencedor === pais,
-                  organizou: edicao.organizacao === pais
+                  ano: edicao.anoEdição
               });
           }
+          
+          // Verificar participações
+          if (edicao.musicas) {
+              const musicaDoPais = edicao.musicas.find(m => 
+                  m.país === pais || 
+                  m.país.replace(/_/g, ' ') === pais
+              );
+              
+              if (musicaDoPais) {
+                  participacoes.push({
+                      id: gerarIdEdicao(edicao.anoEdição),
+                      ano: edicao.anoEdição,
+                      musica: musicaDoPais.título,
+                      interprete: musicaDoPais.intérprete,
+                      venceu: edicao.vencedor === pais,
+                      organizou: edicao.organizacao === pais
+                  });
+              }
+          }
       });
-      
-      // Obter edições organizadas (alternativa mais confiável)
-      const organizacoes = todasEdicoes
-          .filter(edicao => edicao.organizacao === pais)
-          .map(edicao => ({
-              id: gerarIdEdicao(edicao.anoEdição),
-              ano: edicao.anoEdição
-          }));
       
       res.render('pais', {
           title: `País: ${pais}`,

@@ -166,7 +166,7 @@ db.edicoes.aggregate([
   },
   { $sort: { total_vitorias: -1 } }
 ])
-
+Res:
 [
   { _id: 'Ireland', total_vitorias: 7 },
   { _id: 'Sweden', total_vitorias: 6 },
