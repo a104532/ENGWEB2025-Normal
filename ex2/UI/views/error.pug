@@ -1,0 +1,20 @@
+extends layout
+
+block content
+    .w3-card-4.w3-pale-red
+        header.w3-container.w3-red
+            h2
+                i.fas.fa-exclamation-triangle
+                |  Erro
+        
+        .w3-container
+            p.w3-margin-top= message
+            
+            if error
+                .w3-panel.w3-light-grey.w3-margin-top
+                    pre= error
+    
+    .w3-container.w3-margin-top
+        a.w3-button.w3-blue(href='/')
+            i.fas.fa-home
+            |  Voltar

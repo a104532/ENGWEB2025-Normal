@@ -1,0 +1,66 @@
+extends layout
+
+block content
+    .w3-card-4
+        header.w3-container.w3-blue
+            h2
+                i.fas.fa-flag
+                |  País: #{pais}
+        
+        .w3-container
+            h3.w3-text-blue
+                i.fas.fa-trophy
+                |  Participações
+            
+            if participacoes.length > 0
+                table.w3-table-all.w3-hoverable
+                    thead
+                        tr.w3-blue
+                            th Edição
+                            th Ano
+                            th Música
+                            th Intérprete
+                            th Resultado
+                    tbody
+                        each part in participacoes
+                            tr
+                                td
+                                    a(href=`/${part.id}`)= part.id
+                                td= part.ano
+                                td= part.musica
+                                td= part.interprete
+                                td
+                                    if part.venceu
+                                        span.w3-tag.w3-green
+                                            i.fas.fa-crown
+                                            |  Vencedor
+                                    else
+                                        | Participante
+            else
+                .w3-panel.w3-yellow
+                    p Este país ainda não participou no festival.
+            
+            h3.w3-text-blue
+                i.fas.fa-landmark
+                |  Edições Organizadas
+            
+            if organizacoes.length > 0
+                table.w3-table-all.w3-hoverable
+                    thead
+                        tr.w3-blue
+                            th Edição
+                            th Ano
+                    tbody
+                        each org in organizacoes
+                            tr
+                                td
+                                    a(href=`/${org.id}`)= org.id
+                                td= org.ano
+            else
+                .w3-panel.w3-yellow
+                    p Este país ainda não organizou nenhuma edição.
+    
+    .w3-container.w3-margin-top
+        a.w3-button.w3-blue(href='/')
+            i.fas.fa-arrow-left
+            |  Voltar à lista

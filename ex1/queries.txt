@@ -1,0 +1,191 @@
+1. Quantos registos estão na base de dados
+db.edicoes.countDocuments()
+Res:
+65
+
+2. Quantas edições têm "Ireland" como vencedor
+db.edicoes.countDocuments({ winner_country: "Ireland" })
+Res:
+7
+
+3. Qual a lista de intérpretes (ordenada alfabeticamente e sem repetições)
+db.edicoes.aggregate([
+  { $unwind: "$musicas" },
+  { $group: { _id: "$musicas.intérprete" } },
+  { $sort: { _id: 1 } },
+  { $project: { _id: 0, intérprete: "$_id" } }
+])
+Res :
+[
+  { 'intérprete': '1X Band' },
+  { 'intérprete': '2B' },
+  { 'intérprete': '3+2' },
+  { 'intérprete': '3JS' },
+  { 'intérprete': '4Fun' },
+  { 'intérprete': 'A Friend In London' },
+  { 'intérprete': 'ABBA' },
+  { 'intérprete': 'AWS' },
+  { 'intérprete': 'Aarzemnieki' },
+  { 'intérprete': 'Adelaïde' },
+  { 'intérprete': 'Adrian Lulgjuraj  Bledar Sejko' },
+  { 'intérprete': 'Afro-dite' },
+  { 'intérprete': 'Agnete' },
+  { 'intérprete': 'Aida  Frederik Ndoci' },
+  { 'intérprete': 'Aisel' },
+  { 'intérprete': 'Aisha' },
+  { 'intérprete': 'Aiste Smilgeviciute' },
+  { 'intérprete': 'Aivaras' },
+  { 'intérprete': 'Ajda Pekkan' },
+  { 'intérprete': 'Aksel Kankaanranta' }
+]
+
+
+
+4. Qual a distribuição de músicas por edição (quantas músicas há em cada edição)
+db.edicoes.aggregate([
+  {
+    $project: {
+      anoEdição: 1,
+      total_musicas: { $size: "$musicas" }
+    }
+  },
+  { $sort: { anoEdição: 1 } }
+])
+Res:
+[
+  {
+    _id: ObjectId('6839b37be54ded869ad72947'),
+    'anoEdição': '1956',
+    total_musicas: 7
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72948'),
+    'anoEdição': '1957',
+    total_musicas: 10
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad7294a'),
+    'anoEdição': '1958',
+    total_musicas: 10
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad7294c'),
+    'anoEdição': '1959',
+    total_musicas: 11
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72949'),
+    'anoEdição': '1960',
+    total_musicas: 13
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72951'),
+    'anoEdição': '1961',
+    total_musicas: 16
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad7294b'),
+    'anoEdição': '1962',
+    total_musicas: 16
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad7294f'),
+    'anoEdição': '1963',
+    total_musicas: 16
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72955'),
+    'anoEdição': '1964',
+    total_musicas: 16
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad7294d'),
+    'anoEdição': '1965',
+    total_musicas: 18
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad7294e'),
+    'anoEdição': '1966',
+    total_musicas: 18
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72957'),
+    'anoEdição': '1967',
+    total_musicas: 17
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72950'),
+    'anoEdição': '1968',
+    total_musicas: 17
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad7295a'),
+    'anoEdição': '1969',
+    total_musicas: 16
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72953'),
+    'anoEdição': '1970',
+    total_musicas: 12
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72954'),
+    'anoEdição': '1971',
+    total_musicas: 18
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72956'),
+    'anoEdição': '1972',
+    total_musicas: 18
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72952'),
+    'anoEdição': '1973',
+    total_musicas: 17
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72958'),
+    'anoEdição': '1974',
+    total_musicas: 17
+  },
+  {
+    _id: ObjectId('6839b37be54ded869ad72959'),
+    'anoEdição': '1975',
+    total_musicas: 19
+  }
+]
+
+
+5. Qual a distribuição de vitórias por país (quantas vitórias tem cada país)
+db.edicoes.aggregate([
+  { $match: { vencedor: { $exists: true } } },
+  { $group: {
+      _id: "$vencedor",
+      total_vitorias: { $sum: 1 }
+    }
+  },
+  { $sort: { total_vitorias: -1 } }
+])
+
+[
+  { _id: 'Ireland', total_vitorias: 7 },
+  { _id: 'Sweden', total_vitorias: 6 },
+  { _id: 'Luxembourg', total_vitorias: 5 },
+  { _id: 'United_Kingdom', total_vitorias: 4 },
+  { _id: 'Netherlands', total_vitorias: 4 },
+  { _id: 'Israel', total_vitorias: 4 },
+  { _id: 'France', total_vitorias: 4 },
+  { _id: 'Norway', total_vitorias: 3 },
+  { _id: 'Denmark', total_vitorias: 3 },
+  { _id: 'Ukraine', total_vitorias: 2 },
+  { _id: 'Germany', total_vitorias: 2 },
+  { _id: 'Spain', total_vitorias: 2 },
+  { _id: 'Italy', total_vitorias: 2 },
+  { _id: 'Austria', total_vitorias: 2 },
+  { _id: 'Greece', total_vitorias: 1 },
+  { _id: 'Estonia', total_vitorias: 1 },
+  { _id: 'Turkey', total_vitorias: 1 },
+  { _id: 'Yugoslavia', total_vitorias: 1 },
+  { _id: 'Finland', total_vitorias: 1 },
+  { _id: 'Russia', total_vitorias: 1 }
+]
