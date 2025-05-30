@@ -69,62 +69,85 @@ router.get('/:id', async (req, res) => {
 
 /* Página do país */
 router.get('/paises/:pais', async (req, res) => {
-  try {
-      const pais = decodeURIComponent(req.params.pais);
-      
-      // Obter todas as edições
-      const response = await axios.get(`${API_BASE_URL}/edicoes`);
-      const todasEdicoes = response.data;
-      
-      // Processar participações e organizações
-      const participacoes = [];
-      const organizacoes = [];
-      
-      todasEdicoes.forEach(edicao => {
-          // Verificar se organizou
-          if (edicao.organizacao === pais) {
-              organizacoes.push({
-                  id: gerarIdEdicao(edicao.anoEdição),
-                  ano: edicao.anoEdição
-              });
-          }
-          
-          // Verificar participações
-          if (edicao.musicas) {
-              const musicaDoPais = edicao.musicas.find(m => 
-                  m.país === pais || 
-                  m.país.replace(/_/g, ' ') === pais
-              );
-              
-              if (musicaDoPais) {
-                  participacoes.push({
-                      id: gerarIdEdicao(edicao.anoEdição),
-                      ano: edicao.anoEdição,
-                      musica: musicaDoPais.título,
-                      interprete: musicaDoPais.intérprete,
-                      venceu: edicao.vencedor === pais,
-                      organizou: edicao.organizacao === pais
-                  });
-              }
-          }
-      });
-      
-      res.render('pais', {
-          title: `País: ${pais}`,
-          pais: pais,
-          participacoes: participacoes,
-          organizacoes: organizacoes,
-          participou: participacoes.length > 0,
-          organizou: organizacoes.length > 0
-      });
-      
-  } catch (error) {
-      console.error('Erro ao obter informações do país:', error);
-      res.status(500).render('error', {
-          message: "Erro ao obter informações do país",
-          error: error.message
-      });
-  }
+    try {
+        const paisParam = decodeURIComponent(req.params.pais);
+        
+        // Obter todas as edições
+        const response = await axios.get(`${API_BASE_URL}/edicoes`);
+        const todasEdicoes = response.data;
+        
+        // Função de normalização
+        const normalize = (str) => {
+            if (!str) return '';
+            return str.toString()
+                .toLowerCase()
+                .replace(/_/g, ' ')
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .trim();
+        };
+        
+        const paisNormalizado = normalize(paisParam);
+        const participacoes = [];
+        const organizacoes = [];
+
+        for (const edicao of todasEdicoes) {
+            const ano = edicao.anoEdição || edicao.ano;
+            const edicaoId = edicao.id || `ed${ano}`;
+            
+            // Obter dados completos da edição
+            let dadosEdicao;
+            try {
+                const response = await axios.get(`${API_BASE_URL}/edicoes/${edicaoId}`);
+                dadosEdicao = response.data;
+            } catch (error) {
+                continue;
+            }
+
+            // Verificar organização
+            const orgNormalizado = normalize(dadosEdicao.organizacao || dadosEdicao.organizador);
+            if (orgNormalizado === paisNormalizado) {
+                organizacoes.push({
+                    id: edicaoId,
+                    ano: ano
+                });
+            }
+
+            // Verificar participações
+            if (dadosEdicao.musicas && Array.isArray(dadosEdicao.musicas)) {
+                for (const musica of dadosEdicao.musicas) {
+                    const paisMusica = musica.país;
+                    if (!paisMusica) continue;
+
+                    const musicaPaisNormalizado = normalize(paisMusica);
+                    if (musicaPaisNormalizado === paisNormalizado) {
+                        participacoes.push({
+                            id: edicaoId,
+                            ano: ano,
+                            musica: musica.título || musica.titulo,
+                            interprete: musica.intérprete || musica.interprete,
+                            venceu: normalize(dadosEdicao.vencedor) === paisNormalizado,
+                            organizou: orgNormalizado === paisNormalizado
+                        });
+                    }
+                }
+            }
+        }
+
+        res.render('pais', {
+            title: `Eurovisão - ${paisParam}`,
+            pais: paisParam,
+            participacoes: participacoes,
+            organizacoes: organizacoes,
+            participou: participacoes.length > 0,
+            organizou: organizacoes.length > 0
+        });
+
+    } catch (error) {
+        res.status(500).render('error', {
+            message: "Erro ao obter informações do país",
+            error: error.message
+        });
+    }
 });
 
 module.exports = router;
